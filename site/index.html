@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Todo</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="card">
+      <p class="eyebrow">Practice deploy</p>
+      <h1>Todo</h1>
+      <form id="todo-form">
+        <label class="sr-only" for="todo-input">New task</label>
+        <input
+          id="todo-input"
+          name="task"
+          type="text"
+          placeholder="Add a task"
+          autocomplete="off"
+          required
+        />
+        <button type="submit">Add</button>
+      </form>
+
+      <div class="toolbar" role="tablist" aria-label="Filter tasks">
+        <button type="button" class="filter is-active" data-filter="all">All</button>
+        <button type="button" class="filter" data-filter="active">Active</button>
+        <button type="button" class="filter" data-filter="done">Done</button>
+      </div>
+
+      <ul id="todo-list"></ul>
+      <p id="empty" class="empty" hidden>Nothing here yet.</p>
+
+      <footer class="status">
+        <span id="count">0 left</span>
+        <button type="button" id="clear-done">Clear done</button>
+      </footer>
+    </main>
+    <script src="app.js"></script>
+  </body>
+</html>

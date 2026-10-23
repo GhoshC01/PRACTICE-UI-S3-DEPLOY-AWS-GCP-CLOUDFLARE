@@ -1,0 +1,37 @@
+name: Deploy UI
+
+on:
+  push:
+    branches: [main, develop]
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    # branch দেখে environment বেছে নেওয়া
+    environment: ${{ github.ref_name == 'main' && 'prod' || 'develop' }}
+
+    env:
+      ENV: ${{ github.ref_name == 'main' && 'prod' || 'dev' }}
+
+    defaults:
+      run:
+        working-directory: terraform/aws
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}   # environment অনুযায়ী আলাদা মান আসবে
+          aws-region: ap-south-1
+
+      - run: echo "Deploying to $ENV"
+      - run: terraform init -backend-config=env/$ENV.backend.hcl
+      - run: terraform plan -var-file=env/$ENV.tfvars -out=tfplan
+      - run: terraform apply -auto-approve tfplan
