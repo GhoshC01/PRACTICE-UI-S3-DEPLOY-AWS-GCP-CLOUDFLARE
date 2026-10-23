@@ -1,6 +1,4 @@
 # Terraform ও AWS সেটআপ।
-# State বাকেটের বিবরণ env/*.backend.hcl থেকে আসে:
-#   terraform init -backend-config=env/dev.backend.hcl
 
 terraform {
   required_version = ">= 1.10"
@@ -12,7 +10,11 @@ terraform {
     }
   }
 
-  backend "s3" {}
+  backend "s3" {
+    bucket = "my-tf-state-bucket-ui-static-page-practice"
+    key    = "aws/dev/terraform.tfstate"
+    region = "ap-south-1"
+  }
 }
 
 provider "aws" {

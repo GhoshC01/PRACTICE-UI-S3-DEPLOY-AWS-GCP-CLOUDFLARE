@@ -1,4 +1,4 @@
-# কী কী ইনপুট লাগবে। মানগুলো env/dev.tfvars ও env/prod.tfvars-এ থাকে।
+# কী কী ইনপুট লাগবে। মানগুলো terraform.tfvars থেকে আসে।
 
 variable "aws_region" {
   description = "AWS region for the site bucket. The workflow signs in to ap-south-1."
@@ -18,6 +18,7 @@ variable "environment" {
 variable "project_name" {
   description = "Short name used on CloudFront and resource tags."
   type        = string
+  default     = "practice-ui"
 }
 
 variable "bucket_name" {
