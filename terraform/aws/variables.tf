@@ -15,6 +15,7 @@ variable "environment" {
   }
 }
 
+
 variable "project_name" {
   description = "Short name used on CloudFront and resource tags."
   type        = string
