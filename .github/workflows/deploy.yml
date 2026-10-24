@@ -1,8 +1,9 @@
-name: Deploy UI
+name: Deploy UI (dev)
 
 on:
   push:
-    branches: [main, develop]
+    branches: [develop]
+  workflow_dispatch:
 
 permissions:
   id-token: write
@@ -11,12 +12,7 @@ permissions:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
-    # branch দেখে environment বেছে নেওয়া
-    environment: ${{ github.ref_name == 'main' && 'prod' || 'develop' }}
-
-    env:
-      ENV: ${{ github.ref_name == 'main' && 'prod' || 'dev' }}
+    environment: develop
 
     defaults:
       run:
@@ -24,14 +20,22 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
       - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_wrapper: false
 
       - uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}   # environment অনুযায়ী আলাদা মান আসবে
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: ap-south-1
 
-      - run: echo "Deploying to $ENV"
-      - run: terraform init -backend-config=env/$ENV.backend.hcl
-      - run: terraform plan -var-file=env/$ENV.tfvars -out=tfplan
-      - run: terraform apply -auto-approve tfplan
+      - run: terraform init
+      - run: terraform plan
+      - run: terraform apply -auto-approve
+
+      - name: Clear CloudFront cache
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id $(terraform output -raw distribution_id) \
+            --paths "/*"
