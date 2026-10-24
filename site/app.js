@@ -33,11 +33,19 @@ list.addEventListener("change", (event) => {
 
 list.addEventListener("click", (event) => {
   const button = event.target.closest(".delete");
-  if (!button) return;
-  const id = button.closest(".item").dataset.id;
-  todos = todos.filter((entry) => entry.id !== id);
-  save();
-  render();
+  if (button) {
+    const id = button.closest(".item").dataset.id;
+    todos = todos.filter((entry) => entry.id !== id);
+    save();
+    render();
+    return;
+  }
+
+  const label = event.target.closest(".label");
+  if (!label) return;
+  const item = label.closest(".item");
+  const todo = todos.find((entry) => entry.id === item.dataset.id);
+  if (todo) beginEdit(item, todo);
 });
 
 filters.forEach((button) => {
@@ -53,6 +61,39 @@ clearDone.addEventListener("click", () => {
   save();
   render();
 });
+
+function beginEdit(item, todo) {
+  const field = document.createElement("input");
+  field.type = "text";
+  field.className = "edit";
+  field.value = todo.text;
+  field.setAttribute("aria-label", `Edit ${todo.text}`);
+
+  item.querySelector(".label").replaceWith(field);
+  field.focus();
+  field.select();
+
+  let closed = false;
+  const finish = (commit) => {
+    if (closed) return;
+    closed = true;
+    const text = field.value.trim();
+    if (commit && text) todo.text = text;
+    save();
+    render();
+  };
+
+  field.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      finish(true);
+    } else if (event.key === "Escape") {
+      event.preventDefault();
+      finish(false);
+    }
+  });
+  field.addEventListener("blur", () => finish(true));
+}
 
 function load() {
   try {
@@ -86,8 +127,11 @@ function render() {
       checkbox.checked = todo.done;
       checkbox.setAttribute("aria-label", `Mark "${todo.text}" done`);
 
-      const label = document.createElement("span");
+      const label = document.createElement("button");
+      label.type = "button";
+      label.className = "label";
       label.textContent = todo.text;
+      label.title = "Click to edit";
 
       const remove = document.createElement("button");
       remove.type = "button";
