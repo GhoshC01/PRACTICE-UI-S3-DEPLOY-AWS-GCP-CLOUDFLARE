@@ -1,0 +1,47 @@
+name: Deploy UI
+
+on:
+  push:
+    branches: [main, develop]
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ github.ref_name == 'main' && 'prod' || 'develop' }}
+
+    env:
+      WORKSPACE: ${{ github.ref_name == 'main' && 'prod' || 'default' }}
+
+    defaults:
+      run:
+        working-directory: terraform/aws
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_wrapper: false
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ap-south-1
+
+      - run: terraform init
+      - run: terraform workspace select -or-create $WORKSPACE
+      - run: terraform plan
+      - run: terraform apply -auto-approve
+
+      - name: Clear CloudFront cache
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id $(terraform output -raw distribution_id) \
+            --paths "/*"
+
+      - run: terraform output site_url
