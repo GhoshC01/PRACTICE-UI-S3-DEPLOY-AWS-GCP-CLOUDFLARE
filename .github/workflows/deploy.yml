@@ -48,7 +48,7 @@ jobs:
 
         # ─────────── GCP ───────────
   gcp:
-    needs: deploy # AWS সফল হলে তবেই চলবে
+    # Parallel running with AWS
     runs-on: ubuntu-latest
     environment: ${{ github.ref_name == 'main' && 'prod' || 'develop' }}
     env:
