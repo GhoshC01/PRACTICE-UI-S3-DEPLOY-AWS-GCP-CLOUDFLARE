@@ -2,6 +2,12 @@
 # বাকেট প্রাইভেট থাকে। শুধু CloudFront ফাইল পড়তে পারে।
 
 locals {
+  is_prod     = terraform.workspace == "prod"
+  environment = local.is_prod ? "prod" : var.environment
+  bucket_name = local.is_prod ? "my-ui-prod-rajib" : var.bucket_name
+}
+
+locals {
   site_dir   = abspath("${path.module}/../../site")
   site_files = fileset(local.site_dir, "**/*")
   extension = {
@@ -26,7 +32,7 @@ locals {
 }
 
 resource "aws_s3_bucket" "site" {
-  bucket        = var.bucket_name
+  bucket        = local.bucket_name
   force_destroy = var.force_destroy
 }
 
@@ -58,8 +64,8 @@ resource "aws_s3_bucket_versioning" "site" {
 }
 
 resource "aws_cloudfront_origin_access_control" "site" {
-  name                              = "${var.project_name}-${var.environment}"
-  description                       = "Read ${var.bucket_name} from CloudFront only"
+  name                              = "${var.project_name}-${local.environment}"
+  description                       = "Read ${local.bucket_name} from CloudFront only"
   origin_access_control_origin_type = "s3"
   signing_behavior                  = "always"
   signing_protocol                  = "sigv4"
@@ -67,7 +73,7 @@ resource "aws_cloudfront_origin_access_control" "site" {
 
 resource "aws_cloudfront_distribution" "site" {
   enabled             = true
-  comment             = "${var.project_name} ${var.environment}"
+  comment             = "${var.project_name} ${local.environment}"
   default_root_object = "index.html"
   price_class         = "PriceClass_200"
 

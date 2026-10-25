@@ -1,8 +1,8 @@
-name: Deploy UI (dev)
+name: Deploy UI
 
 on:
   push:
-    branches: [develop]
+    branches: [main, develop]
   workflow_dispatch:
 
 permissions:
@@ -12,7 +12,10 @@ permissions:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    environment: develop
+    environment: ${{ github.ref_name == 'main' && 'prod' || 'develop' }}
+
+    env:
+      WORKSPACE: ${{ github.ref_name == 'main' && 'prod' || 'default' }}
 
     defaults:
       run:
@@ -31,6 +34,7 @@ jobs:
           aws-region: ap-south-1
 
       - run: terraform init
+      - run: terraform workspace select -or-create $WORKSPACE
       - run: terraform plan
       - run: terraform apply -auto-approve
 
@@ -39,3 +43,5 @@ jobs:
           aws cloudfront create-invalidation \
             --distribution-id $(terraform output -raw distribution_id) \
             --paths "/*"
+
+      - run: terraform output site_url
