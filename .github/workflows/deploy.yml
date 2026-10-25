@@ -45,3 +45,33 @@ jobs:
             --paths "/*"
 
       - run: terraform output site_url
+
+        # ─────────── GCP ───────────
+  gcp:
+    # Parallel running with AWS
+    runs-on: ubuntu-latest
+    environment: ${{ github.ref_name == 'main' && 'prod' || 'develop' }}
+    env:
+      WORKSPACE: ${{ github.ref_name == 'main' && 'prod' || 'default' }}
+    defaults:
+      run:
+        working-directory: terraform/gcp
+
+    steps:
+      - uses: actions/checkout@v4
+      - run: echo "🚀 GCP → ${{ github.ref_name == 'main' && 'PRODUCTION' || 'DEVELOP' }}"
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_wrapper: false
+
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
+          service_account: ${{ secrets.GCP_SA_EMAIL }}
+
+      - run: terraform init
+      - run: terraform workspace select -or-create $WORKSPACE
+      - run: terraform plan
+      - run: terraform apply -auto-approve
+      - run: terraform output site_url
