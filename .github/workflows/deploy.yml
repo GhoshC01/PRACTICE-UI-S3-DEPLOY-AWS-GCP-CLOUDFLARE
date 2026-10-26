@@ -75,3 +75,20 @@ jobs:
       - run: terraform plan
       - run: terraform apply -auto-approve
       - run: terraform output site_url
+
+
+  # ─────────── Cloudflare ───────────
+  cloudflare:
+    runs-on: ubuntu-latest
+    environment: ${{ github.ref_name == 'main' && 'prod' || 'develop' }}
+
+    steps:
+      - uses: actions/checkout@v4
+      - run: echo "🚀 Cloudflare → ${{ github.ref_name == 'main' && 'PRODUCTION' || 'DEVELOP' }}"
+
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy site --project-name=my-ui-rajib --branch=${{ github.ref_name }}
