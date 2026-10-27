@@ -4,3 +4,6 @@
 .idea/
 *.swp
 *~
+
+# Local secrets and settings. .env.example stays committed.
+.env
